@@ -37,8 +37,8 @@ func NewProxy(
 	}
 }
 
-// forwardRequest forwards a request to a downstream service
-func (p *Proxy) forwardRequest(c *gin.Context, serviceURL string) {
+// ForwardRequest forwards a request to a downstream service
+func (p *Proxy) ForwardRequest(c *gin.Context, serviceURL string) {
 	// Build downstream URL
 	downstreamURL := serviceURL + c.Request.RequestURI
 

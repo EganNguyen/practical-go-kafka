@@ -57,13 +57,13 @@ func main() {
 	authGroup := router.Group("/v1/auth")
 	{
 		authGroup.POST("/register", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.UserServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.UserServiceURL)
 		})
 		authGroup.POST("/login", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.UserServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.UserServiceURL)
 		})
 		authGroup.POST("/refresh", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.UserServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.UserServiceURL)
 		})
 	}
 
@@ -71,10 +71,10 @@ func main() {
 	productsGroup := router.Group("/v1/products")
 	{
 		productsGroup.GET("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.ProductServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.ProductServiceURL)
 		})
 		productsGroup.GET("/:id", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.ProductServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.ProductServiceURL)
 		})
 	}
 
@@ -82,10 +82,10 @@ func main() {
 	searchGroup := router.Group("/v1/search")
 	{
 		searchGroup.GET("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.SearchServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.SearchServiceURL)
 		})
 		searchGroup.GET("/autocomplete", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.SearchServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.SearchServiceURL)
 		})
 	}
 
@@ -97,13 +97,13 @@ func main() {
 	userGroup.Use(protectedAuthMiddleware)
 	{
 		userGroup.GET("/me", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.UserServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.UserServiceURL)
 		})
 		userGroup.PATCH("/me", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.UserServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.UserServiceURL)
 		})
 		userGroup.DELETE("/me", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.UserServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.UserServiceURL)
 		})
 	}
 
@@ -112,19 +112,19 @@ func main() {
 	cartGroup.Use(protectedAuthMiddleware)
 	{
 		cartGroup.GET("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.CartServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.CartServiceURL)
 		})
 		cartGroup.PUT("/items", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.CartServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.CartServiceURL)
 		})
 		cartGroup.DELETE("/items/:sku", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.CartServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.CartServiceURL)
 		})
 		cartGroup.DELETE("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.CartServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.CartServiceURL)
 		})
 		cartGroup.POST("/checkout-preview", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.CartServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.CartServiceURL)
 		})
 	}
 
@@ -133,13 +133,13 @@ func main() {
 	orderGroup.Use(protectedAuthMiddleware)
 	{
 		orderGroup.POST("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.OrderServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.OrderServiceURL)
 		})
 		orderGroup.GET("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.OrderServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.OrderServiceURL)
 		})
 		orderGroup.GET("/:id", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.OrderServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.OrderServiceURL)
 		})
 	}
 
@@ -148,10 +148,10 @@ func main() {
 	paymentGroup.Use(protectedAuthMiddleware)
 	{
 		paymentGroup.POST("", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.PaymentServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.PaymentServiceURL)
 		})
 		paymentGroup.GET("/:id", func(c *gin.Context) {
-			proxyHandler.forwardRequest(c, cfg.PaymentServiceURL)
+			proxyHandler.ForwardRequest(c, cfg.PaymentServiceURL)
 		})
 	}
 

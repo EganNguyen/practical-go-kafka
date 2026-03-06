@@ -3,6 +3,7 @@ package events
 import (
 	"context"
 	"fmt"
+	"time"
 
 	"github.com/segmentio/kafka-go"
 )
@@ -19,7 +20,7 @@ func NewConsumer(brokers []string, topic, groupID string) *Consumer {
 			Brokers:        brokers,
 			Topic:          topic,
 			GroupID:        groupID,
-			CommitInterval: kafka.DefaultCommitInterval,
+			CommitInterval: time.Second,
 			StartOffset:    kafka.LastOffset,
 		}),
 	}

@@ -43,10 +43,9 @@ ps:
 
 # Development targets
 dev:
-	@command -v air >/dev/null 2>&1 || (echo "Installing air..." && go install github.com/cosmtrek/air@latest)
+	@command -v air >/dev/null 2>&1 || (echo "Installing air..." && go install github.com/air-verse/air@latest)
 	cd services/user-service && air &
 	cd services/api-gateway && air &
-	cd services/product-service && air &
 	wait
 
 test:

@@ -1,15 +1,8 @@
-go 1.22
+go 1.23.0
 
 use (
 	./services/api-gateway
 	./services/user-service
-	./services/product-service
-	./services/inventory-service
-	./services/cart-service
-	./services/order-service
-	./services/payment-service
-	./services/notification-service
-	./services/search-service
-	./services/analytics-service
 	./shared
+	./shared/pkg
 )
