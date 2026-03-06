@@ -1,0 +1,93 @@
+# Binaries for programs and plugins
+*.exe
+*.exe~
+*.dll
+*.so
+*.so.*
+*.dylib
+
+# Test binary, built with `go test -c`
+*.test
+
+# Output of the go coverage tool
+*.out
+coverage.html
+coverage.out
+
+# Go workspace file
+go.work.sum
+
+# Dependency directories
+vendor/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Secrets
+etc/secrets/jwt_*
+*.pem
+*.key
+
+# Air hot reload
+tmp/
+air.log
+
+# Build artifacts
+dist/
+build/
+
+# Logs
+logs/
+*.log
+
+# Temporary files
+*.tmp
+*.bak
+
+# OS specific
+Thumbs.db
+.AppleDouble
+.LSOverride
+
+# Docker
+docker-compose.override.yml
+
+# Terraform
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+
+# Helm
+Chart.lock
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Node modules (for frontend)
+node_modules/
+.next/
+.nuxt/
+dist/
+
+# Coverage
+coverage/
+.coverage
+
+# Generated files
+.DS_Store
+Makefile.bak

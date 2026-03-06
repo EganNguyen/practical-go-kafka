@@ -1,0 +1,10 @@
+github.com/golang-jwt/jwt/v5 v5.2.0 h1:d/7Z1xk56jhFjLvXvZKEo0YNS4kQua5dQfrKtzyuzo=
+github.com/golang-jwt/jwt/v5 v5.2.0/go.mod h1:pqrtFR0X4osieyHYxtCC+a7vejcG20FBBJvj/Av69Q=
+github.com/google/uuid v1.6.0 h1:NIvaJDMOfsqAQstkleFp8OHAY+9pqrqSiidGuNTWEA=
+github.com/google/uuid v1.6.0/go.mod h1:TIyPZe4MgqvfeYDBFedMoGGpOy/19UnXga8Sm6zHZE=
+github.com/klauspost/compress v1.17.4 h1:XatheRInZnO2XqLbuffV4pKSTf9fWlRYejz/T5hQZM=
+github.com/klauspost/compress v1.17.4/go.mod h1:/dCuZOvVtNoUJSKAnD2Ane7gvsHJ2OCk+MjCnuIbpc=
+github.com/pierrec/lz4/v4 v4.1.18 h1:xaKrnTkyoqfh1YItXl56+6FCStqmdGZeQbUcJqRUIY=
+github.com/pierrec/lz4/v4 v4.1.18/go.mod h1:gZWDp/Ze/IJXGXf23lFzR5UM5qPCOK+eiHJ+/sNrQ=
+github.com/segmentio/kafka-go v0.4.47 h1:fjMs2lRkCSMj7D82K29rA4ewHCKnXQjkG7I8VkI1Bc=
+github.com/segmentio/kafka-go v0.4.47/go.mod h1:4LLyzNub0xlQ1NLvB53m89vpQE1HlVv+sFp3y47KvU=

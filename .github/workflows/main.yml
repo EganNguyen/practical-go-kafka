@@ -1,0 +1,253 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    paths:
+      - 'services/**'
+      - 'shared/**'
+      - '.github/workflows/**'
+  pull_request:
+    branches: [main, develop]
+    paths:
+      - 'services/**'
+      - 'shared/**'
+
+env:
+  AWS_REGION: us-east-1
+  ECR_REGISTRY: ${{ secrets.AWS_ACCOUNT_ID }}.dkr.ecr.us-east-1.amazonaws.com
+
+jobs:
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      user-service: ${{ steps.changes.outputs.user-service }}
+      api-gateway: ${{ steps.changes.outputs.api-gateway }}
+      shared: ${{ steps.changes.outputs.shared }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      
+      - uses: dorny/paths-filter@v2
+        id: changes
+        with:
+          filters: |
+            user-service:
+              - 'services/user-service/**'
+              - 'shared/**'
+            api-gateway:
+              - 'services/api-gateway/**'
+              - 'shared/**'
+
+  lint-test-shared:
+    runs-on: ubuntu-latest
+    if: contains(github.event.head_commit.modified, 'shared/')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      
+      - name: Run linter
+        run: |
+          cd shared
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          golangci-lint run ./...
+      
+      - name: Run tests
+        run: |
+          cd shared
+          go test -v -race -coverprofile=coverage.out ./...
+          if [ $(go tool cover -func=coverage.out | tail -1 | awk '{print $3}' | cut -d'%' -f1 | cut -d'.' -f1) -lt 80 ]; then
+            echo "Coverage below 80%"
+            exit 1
+          fi
+
+  lint-test-user-service:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.user-service == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      
+      - name: Run linter
+        run: |
+          cd services/user-service
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          golangci-lint run ./...
+          gosec ./...
+      
+      - name: Run go vet
+        run: |
+          cd services/user-service
+          go vet ./...
+      
+      - name: Run tests
+        run: |
+          cd services/user-service
+          go test -v -race -coverprofile=coverage.out ./...
+          if [ $(go tool cover -func=coverage.out | tail -1 | awk '{print $3}' | cut -d'%' -f1 | cut -d'.' -f1) -lt 80 ]; then
+            echo "Coverage below 80%"
+            exit 1
+          fi
+
+  lint-test-api-gateway:
+    runs-on: ubuntu-latest
+    needs: changes
+    if: needs.changes.outputs.api-gateway == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      
+      - name: Run linter
+        run: |
+          cd services/api-gateway
+          go install github.com/golangci/golangci-lint/cmd/golangci-lint@latest
+          go install github.com/securego/gosec/v2/cmd/gosec@latest
+          golangci-lint run ./...
+          gosec ./...
+      
+      - name: Run go vet
+        run: |
+          cd services/api-gateway
+          go vet ./...
+      
+      - name: Run tests
+        run: |
+          cd services/api-gateway
+          go test -v -race -coverprofile=coverage.out ./...
+
+  build-user-service:
+    runs-on: ubuntu-latest
+    needs: lint-test-user-service
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      
+      - name: Build Docker image
+        run: |
+          docker build \
+            --tag $ECR_REGISTRY/ecommerce/user-service:${{ github.sha }} \
+            --tag $ECR_REGISTRY/ecommerce/user-service:latest \
+            --file services/user-service/Dockerfile \
+            .
+      
+      - name: Scan image vulnerabilities
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image $ECR_REGISTRY/ecommerce/user-service:${{ github.sha }}
+
+  build-api-gateway:
+    runs-on: ubuntu-latest
+    needs: lint-test-api-gateway
+    if: github.event_name == 'push' && (github.ref == 'refs/heads/main' || github.ref == 'refs/heads/develop')
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-go@v4
+        with:
+          go-version: '1.22'
+      
+      - name: Build Docker image
+        run: |
+          docker build \
+            --tag $ECR_REGISTRY/ecommerce/api-gateway:${{ github.sha }} \
+            --tag $ECR_REGISTRY/ecommerce/api-gateway:latest \
+            --file services/api-gateway/Dockerfile \
+            .
+      
+      - name: Scan image vulnerabilities
+        run: |
+          docker run --rm -v /var/run/docker.sock:/var/run/docker.sock \
+            aquasec/trivy:latest image $ECR_REGISTRY/ecommerce/api-gateway:${{ github.sha }}
+
+  deploy-staging:
+    runs-on: ubuntu-latest
+    needs: [build-user-service, build-api-gateway]
+    if: github.ref == 'refs/heads/develop'
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+      
+      - name: Push to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+          docker push $ECR_REGISTRY/ecommerce/user-service:${{ github.sha }}
+          docker push $ECR_REGISTRY/ecommerce/api-gateway:${{ github.sha }}
+      
+      - name: Update Helm values
+        run: |
+          sed -i 's|image: .*|image: $ECR_REGISTRY/ecommerce/user-service:${{ github.sha }}|g' infra/helm/values.yaml
+      
+      - name: Deploy with Helm
+        run: |
+          aws eks update-kubeconfig --name ecommerce-platform-eks --region $AWS_REGION
+          helm upgrade --install ecommerce-platform ./infra/helm \
+            --namespace ecommerce \
+            --create-namespace \
+            --wait \
+            --atomic
+
+  deploy-production:
+    runs-on: ubuntu-latest
+    needs: [build-user-service, build-api-gateway]
+    if: github.ref == 'refs/heads/main'
+    environment:
+      name: production
+      url: https://api.ecommerce.example.com
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+          role-to-assume: ${{ secrets.AWS_ROLE_TO_ASSUME }}
+      
+      - name: Push to ECR
+        run: |
+          aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+          docker push $ECR_REGISTRY/ecommerce/user-service:${{ github.sha }}
+          docker push $ECR_REGISTRY/ecommerce/api-gateway:${{ github.sha }}
+      
+      - name: Deploy with Helm (blue-green)
+        run: |
+          aws eks update-kubeconfig --name ecommerce-platform-eks --region $AWS_REGION
+          helm upgrade --install ecommerce-platform ./infra/helm \
+            --namespace ecommerce \
+            --values infra/helm/values-prod.yaml \
+            --wait \
+            --atomic \
+            --timeout 10m
+      
+      - name: Smoke tests
+        run: |
+          kubectl -n ecommerce rollout status deployment/api-gateway --timeout=5m
+          curl -f https://api.ecommerce.example.com/health || exit 1
+      
+      - name: Notify deployment
+        if: always()
+        run: |
+          echo "Deployment completed for version ${{ github.sha }}"

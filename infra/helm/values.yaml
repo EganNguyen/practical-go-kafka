@@ -1,0 +1,101 @@
+## Global configuration
+global:
+  environment: development
+  domain:  localhost
+  imagePullSecrets: []
+
+## PostgreSQL configuration
+postgresql:
+  enabled: true
+  auth:
+    username: ecommerce
+    password: ecommerce-dev
+    database: ecommerce
+  primary:
+    persistence:
+      enabled: true
+      size: 10Gi
+  metrics:
+    enabled: true
+
+## Kafka configuration
+kafka:
+  enabled: true
+  broker:
+    heapOpts: "-Xmx512m -Xms512m"
+    replicas: 1
+  logRetentionHours: 168
+  autoCreateTopicsEnable: true
+
+## Redis configuration
+redis:
+  enabled: true
+  auth:
+    enabled: false
+  replica:
+    replicaCount: 1
+  persistence:
+    enabled: true
+    size: 8Gi
+
+## Service configurations
+services:
+  apiGateway:
+    enabled: true
+    replicas: 1
+    port: 8080
+    image: ecommerce/api-gateway:latest
+
+  userService:
+    enabled: true
+    replicas: 1
+    port: 8081
+    image: ecommerce/user-service:latest
+
+  productService:
+    enabled: true
+    replicas: 1
+    port: 8082
+    image: ecommerce/product-service:latest
+
+  inventoryService:
+    enabled: true
+    replicas: 1
+    port: 8083
+    image: ecommerce/inventory-service:latest
+
+  cartService:
+    enabled: true
+    replicas: 1
+    port: 8084
+    image: ecommerce/cart-service:latest
+
+  orderService:
+    enabled: true
+    replicas: 1
+    port: 8085
+    image: ecommerce/order-service:latest
+
+  paymentService:
+    enabled: true
+    replicas: 1
+    port: 8086
+    image: ecommerce/payment-service:latest
+
+  notificationService:
+    enabled: true
+    replicas: 1
+    port: 8087
+    image: ecommerce/notification-service:latest
+
+  searchService:
+    enabled: true
+    replicas: 1
+    port: 8088
+    image: ecommerce/search-service:latest
+
+  analyticsService:
+    enabled: true
+    replicas: 1
+    port: 8089
+    image: ecommerce/analytics-service:latest

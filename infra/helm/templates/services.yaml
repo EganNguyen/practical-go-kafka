@@ -1,0 +1,193 @@
+---
+# API Gateway Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api-gateway
+  labels:
+    app: api-gateway
+    version: v1
+spec:
+  replicas: {{ .Values.services.apiGateway.replicas }}
+  selector:
+    matchLabels:
+      app: api-gateway
+  template:
+    metadata:
+      labels:
+        app: api-gateway
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8080"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: api-gateway
+        image: {{ .Values.services.apiGateway.image }}
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8080
+          protocol: TCP
+        env:
+        - name: GATEWAY_PORT
+          value: "8080"
+        - name: GATEWAY_ENVIRONMENT
+          value: {{ .Values.global.environment }}
+        - name: GATEWAY_USER_SERVICE_URL
+          value: "http://user-service:8081"
+        - name: GATEWAY_PRODUCT_SERVICE_URL
+          value: "http://product-service:8082"
+        - name: GATEWAY_CART_SERVICE_URL
+          value: "http://cart-service:8084"
+        - name: GATEWAY_ORDER_SERVICE_URL
+          value: "http://order-service:8085"
+        - name: GATEWAY_PAYMENT_SERVICE_URL
+          value: "http://payment-service:8086"
+        - name: GATEWAY_SEARCH_SERVICE_URL
+          value: "http://search-service:8088"
+        - name: GATEWAY_JWT_PUBLIC_KEY_PATH
+          value: "/etc/secrets/jwt_public_key"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: jwt-secrets
+          mountPath: /etc/secrets
+          readOnly: true
+      volumes:
+      - name: jwt-secrets
+        secret:
+          secretName: jwt-keys
+          items:
+          - key: public_key
+            path: jwt_public_key
+
+---
+# API Gateway Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: api-gateway
+  labels:
+    app: api-gateway
+spec:
+  type: LoadBalancer
+  ports:
+  - name: http
+    port: 80
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: api-gateway
+
+---
+# User Service Deployment
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+    version: v1
+spec:
+  replicas: {{ .Values.services.userService.replicas }}
+  selector:
+    matchLabels:
+      app: user-service
+  template:
+    metadata:
+      labels:
+        app: user-service
+        version: v1
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "8081"
+        prometheus.io/path: "/metrics"
+    spec:
+      containers:
+      - name: user-service
+        image: {{ .Values.services.userService.image }}
+        imagePullPolicy: Always
+        ports:
+        - name: http
+          containerPort: 8081
+          protocol: TCP
+        env:
+        - name: USER_SERVICE_PORT
+          value: "8081"
+        - name: USER_SERVICE_ENVIRONMENT
+          value: {{ .Values.global.environment }}
+        - name: USER_SERVICE_DATABASE_URL
+          valueFrom:
+            secretKeyRef:
+              name: database-credentials
+              key: url
+        - name: USER_SERVICE_KAFKA_BROKERS
+          value: "kafka.default.svc.cluster.local:9092"
+        - name: USER_SERVICE_JWT_PRIVATE_KEY_PATH
+          value: "/etc/secrets/jwt_private_key"
+        - name: USER_SERVICE_JWT_PUBLIC_KEY_PATH
+          value: "/etc/secrets/jwt_public_key"
+        resources:
+          requests:
+            cpu: 100m
+            memory: 128Mi
+          limits:
+            cpu: 500m
+            memory: 512Mi
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 10
+          periodSeconds: 10
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: http
+          initialDelaySeconds: 5
+          periodSeconds: 5
+        volumeMounts:
+        - name: jwt-secrets
+          mountPath: /etc/secrets
+          readOnly: true
+      volumes:
+      - name: jwt-secrets
+        secret:
+          secretName: jwt-keys
+
+---
+# User Service Service
+apiVersion: v1
+kind: Service
+metadata:
+  name: user-service
+  labels:
+    app: user-service
+spec:
+  type: ClusterIP
+  ports:
+  - name: http
+    port: 8081
+    targetPort: http
+    protocol: TCP
+  selector:
+    app: user-service
